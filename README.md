@@ -51,8 +51,6 @@ data/
     ├── test.csv
     └── train.csv
 src/
-├── data_audit.py
-├── data_loader.py
 └── main.py
 ```
 

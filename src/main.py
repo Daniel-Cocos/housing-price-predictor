@@ -36,3 +36,13 @@ plt.figure(figsize=(10, 20))
 sns.histplot(missing_summary["Missing Percent"], color="gray", kde=True)
 plt.title("Missing value Histogram")
 plt.savefig("../assets/missing_value_hist")
+
+# Dropping out missing values
+df = df.drop(columns=high_missing.index)
+
+# Plotting correlation heatmap
+correlation = df_num.corr()
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation)
+plt.savefig("../assets/correlation_matrix.png")
+correlation["SalePrice"].sort_values(ascending=False)

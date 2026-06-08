@@ -4,6 +4,8 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
 
 # Loading Data
 df = pd.read_csv("../data/raw/train.csv")
@@ -75,3 +77,18 @@ preds = linear_model.predict(X_valid)  # apply learned coefficient to validation
 mae = mean_absolute_error(y_valid, preds)
 print(f"Linear Regression MAE: {mae:,.2f}")
 
+# Random Forests
+rf_model = RandomForestRegressor(n_estimators=500, random_state=42, n_jobs=-1)
+rf_model.fit(X_train, y_train)
+rf_preds = rf_model.predict(X_valid)
+rf_mae = mean_absolute_error(y_valid, rf_preds)
+print(f"Random Forest MAE: {rf_mae:,.2f}")
+
+# XGBoost
+xgb_model = XGBRegressor(
+    n_estimators=1000, learning_rate=0.05, max_depth=6, random_state=42
+)
+xgb_model.fit(X_train, y_train)
+xgb_preds = xgb_model.predict(X_valid)
+xgb_mae = mean_absolute_error(y_valid, xgb_preds)
+print(f"XGBoost MAE: {xgb_mae:,.2f}")

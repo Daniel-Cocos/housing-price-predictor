@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -92,3 +93,24 @@ xgb_model.fit(X_train, y_train)
 xgb_preds = xgb_model.predict(X_valid)
 xgb_mae = mean_absolute_error(y_valid, xgb_preds)
 print(f"XGBoost MAE: {xgb_mae:,.2f}")
+
+# Importance according to Linear Regression
+linear_importance = pd.DataFrame(
+    {"Feature": X.columns, "Importance": np.abs(linear_model.coef_)}
+)
+linear_importance = linear_importance.sort_values("Importance", ascending=False).head(20)
+print(linear_importance)
+
+# Importance according to Random Forest
+rf_importance = pd.DataFrame(
+    {"Feature": X.columns, "Importance": rf_model.feature_importances_}
+)
+rf_importance = rf_importance.sort_values("Importance", ascending=False).head(20)
+print(rf_importance)
+
+# Importance according to XGBoost
+xgb_importance = pd.DataFrame(
+    {"Feature": X.columns, "Importance": xgb_model.feature_importances_}
+)
+xgb_importance = xgb_importance.sort_values("Importance", ascending=False).head(20)
+print(xgb_importance)

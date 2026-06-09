@@ -2,7 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import shap
+from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
@@ -10,23 +13,25 @@ from xgboost import XGBRegressor
 
 # Loading Data
 df = pd.read_csv("../data/raw/train.csv")
-print(df.info(), df.head(3), "\n", df.describe())
+#df.info()
+#df.head(3))
+#df.describe()
 
 # Missing Value Analysis
 threshold = 20
 missing_count = df.isnull().sum()
 missing_count = missing_count[missing_count > 0]
-print(missing_count)
+#print(f"{missing_count=}")
 
 missing_percent = df.isnull().mean() * 100
 missing_percent = missing_percent[missing_percent > 0]
-print(missing_percent)
+#print(f"{missing_percent=}")
 
 missing_summary = pd.DataFrame(
     {"Mising Count": missing_count, "Missing Percent": missing_percent}
 ).sort_values("Missing Percent", ascending=True)
 high_missing = missing_summary[missing_summary["Missing Percent"] > threshold]
-print(missing_summary)
+#print(f"{missing_summary=}")
 
 # Data Cleaning
 df = df.drop("Id", axis=1)  # I can grab columns by index or other field names
@@ -98,19 +103,52 @@ print(f"XGBoost MAE: {xgb_mae:,.2f}")
 linear_importance = pd.DataFrame(
     {"Feature": X.columns, "Importance": np.abs(linear_model.coef_)}
 )
-linear_importance = linear_importance.sort_values("Importance", ascending=False).head(20)
-print(linear_importance)
+linear_importance = linear_importance.sort_values("Importance", ascending=False).head(
+    20
+)
+#print(linear_importance)
 
 # Importance according to Random Forest
 rf_importance = pd.DataFrame(
     {"Feature": X.columns, "Importance": rf_model.feature_importances_}
 )
 rf_importance = rf_importance.sort_values("Importance", ascending=False).head(20)
-print(rf_importance)
+#print(rf_importance)
 
 # Importance according to XGBoost
 xgb_importance = pd.DataFrame(
     {"Feature": X.columns, "Importance": xgb_model.feature_importances_}
 )
 xgb_importance = xgb_importance.sort_values("Importance", ascending=False).head(20)
-print(xgb_importance)
+#print(xgb_importance)
+
+# Shap Explainability
+explainer = shap.TreeExplainer(xgb_model)
+shap_values = explainer.shap_values(X_valid)
+#print(shap_values)
+
+# Cross Validation
+linear_scores = cross_val_score(
+    linear_model, X, y, cv=5, scoring="neg_mean_absolute_error", n_jobs=-1
+)
+linear_scores = -linear_scores
+
+
+rf_scores = cross_val_score(
+    rf_model, X, y, cv=5, scoring="neg_mean_absolute_error", n_jobs=-1
+)
+rf_scores = -rf_scores
+
+xgb_scores = cross_val_score(
+    xgb_model, X, y, cv=5, scoring="neg_mean_absolute_error", n_jobs=-1
+)
+xgb_scores = -xgb_scores
+
+print(f"Mean linear CV MAE: {linear_scores.mean():,.2f}")
+print(f"Std linear CV MAE: {linear_scores.std():,.2f}")
+
+print(f"Mean RF CV MAE: {rf_scores.mean():,.2f}")
+print(f"Std RF CV MAE: {rf_scores.std():,.2f}")
+
+print(f"Mean xgb CV MAE: {xgb_scores.mean():,.2f}")
+print(f"Std xgb CV MAE: {xgb_scores.std():,.2f}")

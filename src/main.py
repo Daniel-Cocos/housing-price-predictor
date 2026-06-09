@@ -13,25 +13,25 @@ from xgboost import XGBRegressor
 
 # Loading Data
 df = pd.read_csv("../data/raw/train.csv")
-#df.info()
-#df.head(3))
-#df.describe()
+# df.info()
+# df.head(3))
+# df.describe()
 
 # Missing Value Analysis
 threshold = 20
 missing_count = df.isnull().sum()
 missing_count = missing_count[missing_count > 0]
-#print(f"{missing_count=}")
+# print(f"{missing_count=}")
 
 missing_percent = df.isnull().mean() * 100
 missing_percent = missing_percent[missing_percent > 0]
-#print(f"{missing_percent=}")
+# print(f"{missing_percent=}")
 
 missing_summary = pd.DataFrame(
     {"Mising Count": missing_count, "Missing Percent": missing_percent}
 ).sort_values("Missing Percent", ascending=True)
 high_missing = missing_summary[missing_summary["Missing Percent"] > threshold]
-#print(f"{missing_summary=}")
+# print(f"{missing_summary=}")
 
 # Data Cleaning
 df = df.drop("Id", axis=1)  # I can grab columns by index or other field names
@@ -106,26 +106,26 @@ linear_importance = pd.DataFrame(
 linear_importance = linear_importance.sort_values("Importance", ascending=False).head(
     20
 )
-#print(linear_importance)
+# print(linear_importance)
 
 # Importance according to Random Forest
 rf_importance = pd.DataFrame(
     {"Feature": X.columns, "Importance": rf_model.feature_importances_}
 )
 rf_importance = rf_importance.sort_values("Importance", ascending=False).head(20)
-#print(rf_importance)
+# print(rf_importance)
 
 # Importance according to XGBoost
 xgb_importance = pd.DataFrame(
     {"Feature": X.columns, "Importance": xgb_model.feature_importances_}
 )
 xgb_importance = xgb_importance.sort_values("Importance", ascending=False).head(20)
-#print(xgb_importance)
+# print(xgb_importance)
 
 # Shap Explainability
 explainer = shap.TreeExplainer(xgb_model)
 shap_values = explainer.shap_values(X_valid)
-#print(shap_values)
+# print(shap_values)
 
 # Cross Validation
 linear_scores = cross_val_score(
@@ -152,3 +152,41 @@ print(f"Std RF CV MAE: {rf_scores.std():,.2f}")
 
 print(f"Mean xgb CV MAE: {xgb_scores.mean():,.2f}")
 print(f"Std xgb CV MAE: {xgb_scores.std():,.2f}")
+
+# Model Comparison: Validation MAE vs CV MAE
+fig, ax = plt.subplots(figsize=(10, 6))
+
+models = ["Linear Regression", "Random Forest", "XGBoost"]
+holdout = [mae, rf_mae, xgb_mae]
+cv_mean = [linear_scores.mean(), rf_scores.mean(), xgb_scores.mean()]
+x = np.arange(len(models))
+
+# Create bars
+bars1 = ax.bar(x - 0.15, holdout, 0.3, label="Validation MAE", color="#6366f1")
+bars2 = ax.bar(x + 0.15, cv_mean, 0.3, label="5-Fold CV MAE", color="#f59e0b")
+
+# Add value labels
+for bar in [*bars1, *bars2]:
+    height = bar.get_height()
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        height + 500,
+        f"${height:,.0f}",
+        ha="center",
+        fontsize=9,
+        fontweight="bold",
+    )
+
+# Configure plot
+ax.set_xticks(x)
+ax.set_xticklabels(models)
+ax.set_ylabel("Mean Absolute Error ($)")
+ax.set_ylim(0, max(max(holdout), max(cv_mean)) * 1.15)
+ax.set_title(
+    "Model Performance: Validation vs 5-Fold Cross-Validation",
+    fontweight="bold",
+    fontsize=13,
+)
+ax.legend()
+
+plt.savefig("../assets/validation_model_comparison.png", dpi=150)

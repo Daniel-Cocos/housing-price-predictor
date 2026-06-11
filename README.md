@@ -2,6 +2,8 @@
 
 Machine learning project that investigates the key factors influencing house prices, applying full data-science workflow from exploratory analysis and data cleaning through to training, comparing, and interpreting three regression models.
 
+Access my [Jupyter Notebook](https://github.com/Daniel-Cocos/housing-price-predictor/blob/main/src/main.ipynb)
+
 ---
 
 ## Features
